@@ -11,7 +11,7 @@ export async function _storeUser(data) {
 	} catch (error) {
 		return false
 	}
-}
+} 
 export async function _storeWaypoints(data) {
 	try {
 		await AsyncStorage.setItem('waypoints', JSON.stringify(data));
