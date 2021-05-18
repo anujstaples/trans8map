@@ -16,14 +16,14 @@ class Login extends Component {
       versionModal:false,
       device_token:'',
     }
-   
-  }
-  componentDidMount() {
     _retrieveUserToken().then((token) => {
       if(token){
         this.props.navigation.replace("Direction");
       }
     })
+  }
+  componentDidMount() {
+   
   // this.props.navigation.replace("Direction");
   }
   

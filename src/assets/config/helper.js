@@ -30,6 +30,63 @@ export async function _retrieveWaypoints(data) {
 	}
 		
 }
+
+export async function _storeAddress(data) {
+	try {
+		await AsyncStorage.setItem('addresses', JSON.stringify(data));
+		return true;
+	} catch (error) {
+		return false
+	}
+}
+
+export async function _retrieveAddress(data) {
+	try {
+		const value = await AsyncStorage.getItem('addresses');
+		return value
+	} catch (error) {
+		return false
+	}
+		
+}
+
+export async function _storeWarehouse(data) {
+	try {
+		await AsyncStorage.setItem('warehouse', JSON.stringify(data));
+		return true;
+	} catch (error) {
+		return false
+	}
+}
+
+export async function _retrieveWarehouse(data) {
+	try {
+		const value = await AsyncStorage.getItem('warehouse');
+		return value
+	} catch (error) {
+		return false
+	}
+		
+}
+
+export async function _storeFulladdress(data) {
+	try {
+		await AsyncStorage.setItem('fulladdress', JSON.stringify(data));
+		return true;
+	} catch (error) {
+		return false
+	}
+}
+
+export async function _retrieveFulladdress(data) {
+	try {
+		const value = await AsyncStorage.getItem('fulladdress');
+		return value
+	} catch (error) {
+		return false
+	}
+		
+}
 export async function _retrieveUser() {
 	// try {
 	// 	const value = await AsyncStorage.getItem('@Trans8:sQd!@_loginInfo');

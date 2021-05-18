@@ -1,5 +1,5 @@
 import config from './config/config' ;
-import {_retrieveUser, _storeUser, _removeUser, _showErrorMessage, _showSuccessMessage, _getAll,_storeData,_retrieveData,_retrieveUserToken,checkNet,_storeWaypoints,_retrieveWaypoints } from './config/helper' ;
+import {_retrieveUser, _storeUser, _removeUser, _showErrorMessage,_retrieveAddress,_storeAddress,_storeWarehouse, _retrieveWarehouse, _showSuccessMessage, _getAll,_storeData,_retrieveData,_retrieveUserToken,checkNet,_storeWaypoints,_retrieveWaypoints, _storeFulladdress, _retrieveFulladdress } from './config/helper' ;
 import { Loader } from './config/Loader' ;
 import { LoaderMain } from './config/LoaderMain' ;
 
@@ -20,7 +20,8 @@ const image = {
 	correct: require('./images/correct.png'),
 	scan: require('./images/scan.png'),
 	splash: require('./images/splash.gif'),
-	start: require('./images/start.png')
+	start: require('./images/start.png'),
+	marker: require('./images/marker.png')
 }
 
 
@@ -40,5 +41,11 @@ export {
 	_retrieveUserToken,
 	checkNet,
 	_storeWaypoints,
-	_retrieveWaypoints
+	_retrieveWaypoints,
+	_retrieveAddress,
+	_storeAddress,
+	_storeWarehouse,
+	_retrieveWarehouse,
+	_storeFulladdress,
+	_retrieveFulladdress
 }

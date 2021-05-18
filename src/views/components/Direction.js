@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import { View, Text, Image, SafeAreaView, NetInfo, StyleSheet,Button,Dimensions,TouchableOpacity } from 'react-native';
-import { image, config, _showErrorMessage, _showSuccessMessage, _retrieveUser,_retrieveWaypoints,_storeWaypoints, Loader, _storeUser } from '../../assets';
+import { image, config, _showErrorMessage, _showSuccessMessage, _retrieveUser,_storeWarehouse, _retrieveWarehouse, _retrieveWaypoints,_storeWaypoints,_storeAddress, Loader, _storeUser, _retrieveFulladdress,_storeFulladdress } from '../../assets';
 import { getRoutes } from '../../api';
+import Geolocation from '@react-native-community/geolocation';
+navigator.geolocation = require('@react-native-community/geolocation');
+
 class Direction extends Component { 
   constructor(props){
     super(props); 
@@ -14,20 +17,30 @@ class Direction extends Component {
 }
 
 componentDidMount = () => { 
-// this.props.navigation.replace("Map");
+  navigator.geolocation.getCurrentPosition(
+            (position) => {
+             
+              this.props.navigation.replace("Map", { names: [position.coords.latitude,position.coords.longitude]});
+
+            },
+            (error) => console.warn(error.message),
+            { enableHighAccuracy: true, timeout: 10000 }
+          )
 
 
 }
 
 getNewRoutes(){
-
-  this.setState({isloading:true});
+ 
+this.setState({isloading:true});
 
 getRoutes().then((res) => {
   console.log(res)
   if(res.type == 1){
-
-      var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=X-DD8Iw__H4RqFN03BfC3kBpmITPClOO9kk_xoVFGlc&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=time&mode=fastest;car;&';
+      _storeWarehouse(res.data.lat_long[0].address);
+      _storeFulladdress(res.data.lat_long);
+      var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=hoeC8KKbZAQv2dVprjVcaN0LrXnojTkNThDzV9iG2kM&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=time&mode=fastest;car;&';
+      // var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=X-DD8Iw__H4RqFN03BfC3kBpmITPClOO9kk_xoVFGlc&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=time&mode=fastest;car;&';
       var count = 0;
       var string = url;
       for (const key of res.data.lat_long) {
@@ -67,6 +80,8 @@ fetch(url,{
   const obj=[];
   if(res.results != null){
 
+    _storeAddress(res.results[0].waypoints);
+
    for (const key of res.results[0].waypoints) {
     
         obj.push({latitude: key.lat, longitude:key.lng});
@@ -76,10 +91,18 @@ fetch(url,{
    this.setState({isloading:false});
 
    _storeWaypoints(obj).then((res) => {
-       this.props.navigation.replace("Map");
-   })
 
-  
+      navigator.geolocation.getCurrentPosition(
+            (position) => {
+             
+              this.props.navigation.replace("Map", { names: [position.coords.latitude,position.coords.longitude]});
+
+            },
+            (error) => console.warn(error.message),
+            { enableHighAccuracy: true, timeout: 10000 }
+          )
+
+   })
  
   }
   else 
