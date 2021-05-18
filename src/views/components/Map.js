@@ -85,6 +85,8 @@ componentDidMount = () => {
         this.setState({points:newpoints});
         // console.log(this.state.latitude) 
         // console.log(this.state.longitude)
+
+      
     })
 
 
@@ -121,7 +123,7 @@ this.watchID = navigator.geolocation.watchPosition(
            // alert()
           this.marker.animateMarkerToCoordinate(
             newCoordinate,
-            100
+            500
           );
          }
        } else {
@@ -144,7 +146,7 @@ this.watchID = navigator.geolocation.watchPosition(
 
      },
      error => console.log(error),
-     { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+     { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000,distanceFilter:0 }
   );
 
 }

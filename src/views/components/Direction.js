@@ -17,15 +17,15 @@ class Direction extends Component {
 }
 
 componentDidMount = () => { 
-  navigator.geolocation.getCurrentPosition(
-            (position) => {
+  // navigator.geolocation.getCurrentPosition(
+  //           (position) => {
              
-              this.props.navigation.replace("Map", { names: [position.coords.latitude,position.coords.longitude]});
+  //             this.props.navigation.replace("Map", { names: [position.coords.latitude,position.coords.longitude]});
 
-            },
-            (error) => console.warn(error.message),
-            { enableHighAccuracy: true, timeout: 10000 }
-          )
+  //           },
+  //           (error) => console.warn(error.message),
+  //           { enableHighAccuracy: true, timeout: 10000 }
+  //         )
 
 
 }
@@ -39,8 +39,8 @@ getRoutes().then((res) => {
   if(res.type == 1){
       _storeWarehouse(res.data.lat_long[0].address);
       _storeFulladdress(res.data.lat_long);
-      var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=hoeC8KKbZAQv2dVprjVcaN0LrXnojTkNThDzV9iG2kM&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=time&mode=fastest;car;&';
-      // var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=X-DD8Iw__H4RqFN03BfC3kBpmITPClOO9kk_xoVFGlc&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=time&mode=fastest;car;&';
+      // var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=hoeC8KKbZAQv2dVprjVcaN0LrXnojTkNThDzV9iG2kM&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=time&mode=shortest;car;traffic:disabled;&';
+      var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=X-DD8Iw__H4RqFN03BfC3kBpmITPClOO9kk_xoVFGlc&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=distance&mode=shortest;car;traffic:disabled;&';
       var count = 0;
       var string = url;
       for (const key of res.data.lat_long) {
