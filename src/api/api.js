@@ -27,3 +27,14 @@ export async function getRoutes() {
                     }).then((res) => res.json())
   });
 }
+
+export async function demo() {
+
+    return fetch('https://my-json-server.typicode.com/typicode/demo/posts',{
+                      method: 'GET',
+                      headers: {
+                          'Accept': 'application/json',
+                          'Content-Type': 'application/json'
+                      },
+                    }).then((res) => res.json())
+}

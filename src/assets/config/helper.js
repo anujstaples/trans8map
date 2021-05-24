@@ -160,19 +160,19 @@ export async function _showErrorMessage(msg, showAlert = false) {
 	}
 }
 
-// export async function _showSuccessMessage(msg, showAlert = false) {
-// 	if(showAlert) {
-// 		alert(msg);
-// 	}else {
-// 		Toast.show({
-// 			text: msg,
-// 			buttonText: "Okay",
-// 			duration: 3000,
-// 			type: "success",
-// 			position:Platform.OS === 'ios' ? 'top' : 'bottom',
-// 		});
-// 	}
-// }
+export async function _showSuccessMessage(msg, showAlert = false) {
+	if(showAlert) {
+		alert(msg);
+	}else {
+		Toast.show({
+			text: msg,
+			buttonText: "Okay",
+			duration: 3000,
+			type: "success",
+			position:Platform.OS === 'ios' ? 'top' : 'bottom',
+		});
+	}
+}
 
 // export async function _storeData(key,data) {
 // 	try {

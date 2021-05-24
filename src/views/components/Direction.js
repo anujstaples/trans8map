@@ -17,15 +17,36 @@ class Direction extends Component {
 }
 
 componentDidMount = () => { 
-  // navigator.geolocation.getCurrentPosition(
-  //           (position) => {
-             
-  //             this.props.navigation.replace("Map", { names: [position.coords.latitude,position.coords.longitude]});
 
-  //           },
-  //           (error) => console.warn(error.message),
-  //           { enableHighAccuracy: true, timeout: 10000 }
-  //         )
+_storeWaypoints([
+  {latitude:29.513397217929786, longitude:76.71176883208344},  
+  {latitude:29.512944, longitude:76.711241},
+  {latitude:29.512430, longitude:76.711182}, 
+  {latitude:29.512812, longitude:76.710318 },
+  {latitude:29.513835, longitude:76.708816 },
+  {latitude:29.514683, longitude:76.707621 }
+]);
+
+_storeFulladdress([
+    {address:"Parnit Furniture",latitude:29.512944, longitude:76.711241},
+    {address:"Punjab National Bank",latitude:29.512430, longitude:76.711182} 
+]);
+
+_storeAddress([
+  {lat:29.513397217929786, lng:76.71176883208344,sequence:0},  
+  {lat:29.512944, lng:76.711241,sequence:1},
+  {lat:29.512430, lng:76.711182,sequence:2} 
+]);
+
+  navigator.geolocation.getCurrentPosition(
+            (position) => {
+             
+              this.props.navigation.replace("Map", { names: [position.coords.latitude,position.coords.longitude]});
+
+            },
+            (error) => console.warn(error.message),
+            { enableHighAccuracy: true, timeout: 10000 }
+          )
 
 
 }
@@ -35,12 +56,12 @@ getNewRoutes(){
 this.setState({isloading:true});
 
 getRoutes().then((res) => {
-  console.log(res)
+  // console.log(res.data.lat_long)
   if(res.type == 1){
       _storeWarehouse(res.data.lat_long[0].address);
       _storeFulladdress(res.data.lat_long);
-      // var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=hoeC8KKbZAQv2dVprjVcaN0LrXnojTkNThDzV9iG2kM&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=time&mode=shortest;car;traffic:disabled;&';
-      var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=X-DD8Iw__H4RqFN03BfC3kBpmITPClOO9kk_xoVFGlc&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=distance&mode=shortest;car;traffic:disabled;&';
+      var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=hoeC8KKbZAQv2dVprjVcaN0LrXnojTkNThDzV9iG2kM&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=time&mode=shortest;car;traffic:disabled;&';
+      // var url = 'https://wse.ls.hereapi.com/2/findsequence.json?apiKey=X-DD8Iw__H4RqFN03BfC3kBpmITPClOO9kk_xoVFGlc&start='+res.data.lat_long[0].latitude+','+res.data.lat_long[0].longitude+'&improveFor=distance&mode=shortest;car;traffic:disabled;&';
       var count = 0;
       var string = url;
       for (const key of res.data.lat_long) {
@@ -75,8 +96,8 @@ fetch(url,{
   })
   .then((response) => response.json())
   .then((res) => {
-     console.log(res)
-    // alert();
+     // console.log(res)
+    // alert(); 
   const obj=[];
   if(res.results != null){
 

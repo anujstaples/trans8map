@@ -21,7 +21,8 @@ const image = {
 	scan: require('./images/scan.png'),
 	splash: require('./images/splash.gif'),
 	start: require('./images/start.png'),
-	marker: require('./images/marker.png')
+	marker: require('./images/marker.png'),
+	location: require('./images/location.png')
 }
 
 

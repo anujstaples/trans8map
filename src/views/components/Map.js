@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { View, Text, Image, SafeAreaView, NetInfo, StyleSheet,Button,Dimensions,TouchableOpacity,FlatList } from 'react-native';
-import { _retrieveWaypoints,image,_retrieveAddress,_retrieveWarehouse,_retrieveFulladdress } from '../../assets';
+import { View, Text, Image, SafeAreaView, NetInfo, StyleSheet,Button,Dimensions,TouchableOpacity,FlatList,Modal } from 'react-native';
+import { _retrieveWaypoints,image,_retrieveAddress,_retrieveWarehouse,_retrieveFulladdress,_showSuccessMessage } from '../../assets';
 import { StackActions } from '@react-navigation/native';
+import { demo } from '../../api';
 import BackgroundFetch from 'react-native-background-fetch';
 import {Picker} from '@react-native-picker/picker';
 import { AsyncStorage } from 'react-native';
@@ -17,20 +18,20 @@ const haversine = require('haversine');
  
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
+
+
 const LATITUDE = 43.6038821;
 const LONGITUDE = -79.5127419;
-const LATITUDE_DELTA = 0.0922;
+const LATITUDE_DELTA = 0.0;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 const GOOGLE_MAPS_APIKEY = 'AIzaSyAeewuHY3zbXBGxOB8kR-4dFNVFoWyhNTo';
 
 class Map extends Component { 
   constructor(props){
     super(props); 
-    console.log(this.props?.route?.params?.names[1]);
+
     this.state = {
-      channelid:'12345',
-      seconds: 5,
-      status: "false",
+
       latitude: null,
       longitude: null,
       maplatitude: 11,
@@ -40,12 +41,7 @@ class Map extends Component {
       routeCoordinates: [],
       distanceTravelled: 0,
       prevLatLng: {},
-     coordinate: new AnimatedRegion({
-        latitude: this.props?.route?.params?.names[0],
-        longitude: this.props?.route?.params?.names[1],
-        latitudeDelta: 0, 
-        longitudeDelta: 0
-      }),
+  
       points:[],
       points2:null,
       showview:'map',
@@ -53,15 +49,25 @@ class Map extends Component {
       ],
       warehouse:'',
       fulladdress:[],
+      nextpoint:0,
+      LATITUDE_DELTA : 0.01,
+      LONGITUDE_DELTA : LATITUDE_DELTA * ASPECT_RATIO,
+      currentpointstatus:true,
+      bottomMargin:null,
+      title:''
     }
     
 }
 
 componentDidMount = () => { 
+            
+
+setTimeout(()=>this.setState({statusBarHeight: 1}),500);
 
   _retrieveAddress().then((address) => {
 
       this.setState({FlatListItems:JSON.parse(address)});
+      // console.log(this.state.FlatListItems);
   })
   _retrieveFulladdress().then((address) => {
 
@@ -78,7 +84,9 @@ componentDidMount = () => {
         
         var total = newpoints.length;
         // console.log(newpoints);
+        // console.log(newpoints.length);
         this.setState({origin:{"latitude": newpoints[0].latitude, "longitude": newpoints[0].longitude}});
+        // this.setState({destination:{"latitude": newpoints[0].latitude, "longitude": newpoints[0].longitude}});
         this.setState({destination:{"latitude":newpoints[total-1].latitude, "longitude": newpoints[total-1].longitude}});
         this.setState({maplatitude:newpoints[0].latitude});
         this.setState({maplongitude:newpoints[0].longitude});
@@ -94,7 +102,7 @@ componentDidMount = () => {
 Geolocation.getCurrentPosition((info) => {
 var latitude = info.coords.latitude;
 var longitude = info.coords.longitude;
-console.log(latitude);
+// console.log(latitude,longitude);
 this.setState({
          latitude,
          longitude,
@@ -104,7 +112,12 @@ this.setState({
           }
        });
 
-});
+},
+error => console.log(error),
+{ enableHighAccuracy: true, timeout: 20000}
+
+
+);
 
 
 this.watchID = navigator.geolocation.watchPosition(
@@ -129,20 +142,10 @@ this.watchID = navigator.geolocation.watchPosition(
        } else {
          coordinate.timing(newCoordinate).start();
        }
-       // this.setState({
-       //   latitude, 
-       //   longitude,
-       //   routeCoordinates: routeCoordinates.concat([newCoordinate]),
-       //   distanceTravelled:
-       //   distanceTravelled + this.calcDistance(newCoordinate),
-       //   prevLatLng: newCoordinate
-       // });
 
-       // this.setState({
-       //   maplatitude: latitude, 
-       //   maplongitude: longitude
-        
-       // });
+       this.checkOnArrive(latitude, longitude);
+
+
 
      },
      error => console.log(error),
@@ -151,18 +154,30 @@ this.watchID = navigator.geolocation.watchPosition(
 
 }
 
+checkOnArrive = (lat,long) => {
 
-calcDistance = newLatLng => {
-  const { prevLatLng } = this.state;
-  return haversine(prevLatLng, newLatLng) || 0;
-};
+  if(this.state.nextpoint < this.state.points.length){
 
-getMapRegion = () => ({
-  latitude: this.state.latitude,
-  longitude: this.state.longitude,
-  latitudeDelta: LATITUDE_DELTA,
-  longitudeDelta: LONGITUDE_DELTA
-});
+    const destinationltlg = {latitude:this.state.points[this.state.nextpoint].latitude,longitude:this.state.points[this.state.nextpoint].longitude}
+ 
+    const start = {latitude: lat, longitude: long }
+
+    const distance = Math.round(haversine(start,destinationltlg,  {unit: 'meter'}));
+   
+    if(distance < 20 && this.state.currentpointstatus == true){
+
+        _showSuccessMessage('point'+this.state.nextpoint);
+      
+        this.setState({nextpoint:this.state.nextpoint+1,currentpointstatus:false}); 
+
+    }
+    else{
+      this.setState({currentpointstatus:true});
+    }
+    
+ }
+
+}
 
 componentWillUnmount() {
   
@@ -170,26 +185,38 @@ componentWillUnmount() {
  
 
 
-distance = (lat1, lon1, lat2, lon2, unit) => {
-  var radlat1 = Math.PI * lat1 / 180;
-  var radlat2 = Math.PI * lat2 / 180;
-  var theta = lon1 - lon2;
-  var radtheta = Math.PI * theta / 180;
-  var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-  dist = Math.acos(dist);
-  dist = dist * 180 / Math.PI;
-  dist = dist * 60 * 1.1515;
-  dist = dist * 1.609344;
-
-  return dist;
-}
-
  handleGetDirections = (coordinate) => {
-  // console.log(coordinate);
+
   const data = {
       destination: {
         latitude: coordinate.latitude,
         longitude: coordinate.longitude
+      },
+      params: [
+        {
+          key: "travelmode",
+          value: "driving"        // may be "walking", "bicycling" or "transit" as well
+        },
+        {
+          key: "dir_action",
+          value: "navigate"       // this instantly initializes navigation using the given travel mode
+        }
+      ],
+      waypoints: [
+        
+        
+      ]
+    }
+ 
+    getDirections(data)
+  }
+
+   handleGetDirectionsFromList = (lat,lon) => {
+ 
+  const data = {
+      destination: {
+        latitude: lat,
+        longitude: lon
       },
       params: [
         {
@@ -215,7 +242,7 @@ distance = (lat1, lon1, lat2, lon2, unit) => {
     this.setState({
           showview:view,
         })
-    // alert(this.state.showview);
+  
     }
 
 
@@ -233,6 +260,7 @@ distance = (lat1, lon1, lat2, lon2, unit) => {
     return (
       <View style={styles.container}>
         <View style={{alignItems: 'center',flexDirection:'row',marginTop: 10}}>
+
          {this.state.showview == "map" &&     
           <Text style={styles.Active} onPress={() => this.ChangeView('map')}>Map</Text>
            }
@@ -247,29 +275,54 @@ distance = (lat1, lon1, lat2, lon2, unit) => {
            }
         </View>
         {this.state.showview == "map" &&
-        <View>
+        <View style={{ width: '100%', height: '90%'}}>
         <MapView
-
-            style={styles.map}
-            
-            region={{
+            ref={(ref) => { this.map = ref }} 
+            initialRegion={{
               latitude: this.state.maplatitude,
               longitude: this.state.maplongitude,
-              latitudeDelta: LATITUDE_DELTA,
-              longitudeDelta: LONGITUDE_DELTA,
+              latitudeDelta: this.state.LATITUDE_DELTA,
+              longitudeDelta: this.state.LONGITUDE_DELTA,
             }}
-            showUserLocation
-            followUserLocation
-            loadingEnabled
-          style={{ width: '100%', height: '90%' }}
-          mapType={Platform.OS == "android" ? "standard" : "standard"}
-            >
-             <Marker.Animated
-          ref={marker => {
-            this.marker = marker;
+            mapPadding={{
+                        top: 20,
+                        right: 20,
+                        bottom: 20,
+                        left: 20
+                    }}
+            loadingEnabled={false}
+            showsUserLocation
+            userLocationPriority={'high'}
+            followsUserLocation={true}
+            showsMyLocationButton={true}
+            showsTraffic={false}
+            zoomEnabled={true}
+            zoomTapEnabled={true}
+            zoomControlEnabled={true}
+            rotateEnabled={true}
+            scrollEnabled={true}
+            toolbarEnabled={true}
+            showsCompass={false}
+            userInterfaceStyle={'dark'}
+            onRegionChangeComplete = {(region) => {
+              //console.log(this.map.getCamera());
+                  // this.map.animateCamera(, 350);
+                //this.setState({LATITUDE_DELTA:region.latitudeDelta,LONGITUDE_DELTA:region.longitudeDelta,maplatitude:region.latitude,maplongitude:region.longitude});
+               
+                    }} 
+            
+          style={{
+            marginBottom: this.state.bottomMargin,            
+            ...StyleSheet.absoluteFillObject,
           }}
-          coordinate={this.state.coordinate}
-        />
+         
+          mapType={Platform.OS == "android" ? "standard" : "standard"}
+          onLayout = { (some) => {
+
+          }}
+          onMapReady={() => this.setState({ bottomMargin: 20 })}
+            >
+           
         {this.state.points.map((coordinate, index) =>
           <MapView.Marker key={`coordinate_${index}`} pinColor="green" coordinate={coordinate} onPress={() => this.handleGetDirections(coordinate)}>
           
@@ -288,9 +341,14 @@ distance = (lat1, lon1, lat2, lon2, unit) => {
             strokeColor="hotpink"
             optimizeWaypoints={false}
             timePrecision="now"
+            mode="DRIVING"
+            onReady={result => {
+
+              }}
           />
 
       </MapView> 
+      <Text style={styles.name}>sdfsdfsd</Text>
       </View>
     }
     {this.state.showview == "list" &&
@@ -307,8 +365,11 @@ distance = (lat1, lon1, lat2, lon2, unit) => {
                     {this.getaddress(item.lat)} {item.sequence == -1 && <Text>( {this.state.warehouse} )</Text> }
                     </Text>
                     </View>
+                            
                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <Image style={styles.userImage} source={require('../../assets/images/marker.png')}/>
+                    <TouchableOpacity onPress={() => this.handleGetDirectionsFromList(item.lat,item.lng)}>
+                    <Image style={styles.userImage} source={require('../../assets/images/location.png')}  />
+                    </TouchableOpacity>
                     </View>
                    
                   
@@ -351,8 +412,8 @@ const styles = StyleSheet.create({
     width: 100,
   },
   maps: {
-    width: Dimensions.get('screen').width,
-    height: Dimensions.get('screen').height,
+    ...StyleSheet.absoluteFillObject
+
   },
    Active:{
     color: '#247ee8',
