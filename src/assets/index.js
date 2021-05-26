@@ -22,7 +22,15 @@ const image = {
 	splash: require('./images/splash.gif'),
 	start: require('./images/start.png'),
 	marker: require('./images/marker.png'),
-	location: require('./images/location.png')
+	location: require('./images/location.png'),
+	driver: require('./images/driver.png'),
+	blue: require('./images/blue.png'),
+	red: require('./images/red.png'),
+	yellow: require('./images/yellow.png'),
+	pin: require('./images/pin.png'),
+	startpoint: require('./images/startpoint.png'),
+	complete: require('./images/complete.png'),
+	pending: require('./images/pending.png'),
 }
 
 

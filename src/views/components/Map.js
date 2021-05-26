@@ -143,7 +143,7 @@ this.watchID = navigator.geolocation.watchPosition(
          coordinate.timing(newCoordinate).start();
        }
 
-       this.checkOnArrive(latitude, longitude);
+       //this.checkOnArrive(latitude, longitude);
 
 
 
@@ -274,8 +274,65 @@ componentWillUnmount() {
           <Text style={styles.HeadStyle} onPress={() => this.ChangeView('list')}>List</Text>
            }
         </View>
+        <View style={styles.driverheader}>
+          <View style={styles.item}>
+          <View style={styles.section}>
+            <View style={styles.profileimg}>
+            <Image source={require('../../assets/images/driver.png')}  />
+            </View>
+             <View style={{width:"70%",paddingLeft:10}}>
+                <Text style={{fontSize:16,fontWeight:'bold'}}>Driver Name:</Text>
+                <Text style={{fontSize:14,fontWeight:'bold'}}>Date:</Text>
+             </View>
+             </View>
+          </View>
+          <View style={styles.section}>
+            <View style={styles.item}>
+              <Text style={{fontSize:16,fontWeight:'bold'}}>Steve Smith</Text>
+              <Text style={{fontSize:14,fontWeight:'bold'}}>21st May 2021</Text>
+            </View>
+          </View>  
+        </View>
+
+        <View style={styles.indication}>
+
+          <View style={styles.item2}>
+            <View style={styles.section}>
+              <View style={styles.profileimg2}>
+              <Image source={require('../../assets/images/blue.png')}  />
+              </View>
+               <View style={{width:"70%",paddingLeft:0}}>
+                  <Text style={{fontSize:14,fontWeight:'bold',paddingTop:6}}>Delevered</Text>
+               </View>
+            </View>
+          </View>
+
+          <View style={styles.item2}>
+            <View style={styles.section}>
+              <View style={styles.profileimg2}>
+              <Image source={require('../../assets/images/red.png')}  />
+              </View>
+               <View style={{width:"70%",paddingLeft:0}}>
+                  <Text style={{fontSize:14,fontWeight:'bold',paddingTop:6}}> Not Delevered</Text>
+               </View>
+            </View>
+          </View>
+
+          <View style={styles.item2}>
+            <View style={styles.section}>
+              <View style={styles.profileimg2}>
+              <Image source={require('../../assets/images/yellow.png')}  />
+              </View>
+               <View style={{width:"70%",paddingLeft:0}}>
+                  <Text style={{fontSize:14,fontWeight:'bold',paddingTop:6}}> Pending</Text>
+               </View>
+            </View>
+          </View>
+            
+        </View>
+
         {this.state.showview == "map" &&
-        <View style={{ width: '100%', height: '90%'}}>
+        <View style={{ width: '100%', height: '60%',flexDirection:'row'}}>
         <MapView
             ref={(ref) => { this.map = ref }} 
             initialRegion={{
@@ -320,16 +377,25 @@ componentWillUnmount() {
           onLayout = { (some) => {
 
           }}
-          onMapReady={() => this.setState({ bottomMargin: 20 })}
+          onMapReady={() => this.setState({ bottomMargin: 1 })}
             >
            
         {this.state.points.map((coordinate, index) =>
           <MapView.Marker key={`coordinate_${index}`} pinColor="green" coordinate={coordinate} onPress={() => this.handleGetDirections(coordinate)}>
           
-          <Text style={{backgroundColor:"green",height:20,textAlign: 'center',color:"#fff",borderWidth: 5,borderRadius:10}}>{index+1}</Text>
+          { index == 0 ?
+            <Image source={require('../../assets/images/complete.png')}  />
+
+            :<View><Image source={require('../../assets/images/pending.png')}  />
+            <Text style={{textAlign: 'center',color:"#000",position:'absolute',right:15,top:6,fontWeight:'bold'}}>{index+1}</Text></View>
+          }
+
+          
           
           </MapView.Marker>
         )}
+
+
 
         <MapViewDirections   
             origin={this.state.origin}
@@ -352,28 +418,38 @@ componentWillUnmount() {
       </View>
     }
     {this.state.showview == "list" &&
-      <View style={{ width: '100%', height: '90%',backgroundColor:"#2d292d" }}>
+      <View style={{ width: '100%', height: '60%',backgroundColor:"#fff",padding:5 }}>
+           
+           <View style={{flexDirection:'row',padding:10,backgroundColor:'#cbf2fc',borderRadius:15,marginBottom:10}}>
+                  <View style={{width:'15%',backgroundColor:'#fff',padding:5,borderRadius:10,justifyContent: 'center',alignItems: 'center',
+}}>
+                  <Image source={require('../../assets/images/startpoint.png')}  />
+                  </View>
+                  <View style={{width:"85%",paddingLeft:10}}>
+                    <Text style={{fontSize:18,fontWeight:'bold',paddingTop:0,color:"#000"}}>Start Point</Text>
+                    <Text style={{fontSize:14,fontWeight:'bold',paddingTop:0,color:"#000"}}>
+                   205 New Toronto St, Toronto {"\n"}ON M8VOA1, Canada</Text>
+                  </View>
+          </View> 
           <FlatList
                 data={this.state.FlatListItems}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
 
-                  <View style={styles.card}>
-                   <View style={styles.imgtext}>
-                    <Text style={{fontSize:16, backgroundColor:"#fff",height:25,width:25,textAlign: 'center',color:"#007efe",borderColor:"#fff",borderWidth: 5,borderRadius:15,fontWeight:"bold"}}>{item.sequence+1}</Text>
-                    <Text style={styles.name}>
-                    {this.getaddress(item.lat)} {item.sequence == -1 && <Text>( {this.state.warehouse} )</Text> }
-                    </Text>
-                    </View>
-                            
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                    <TouchableOpacity onPress={() => this.handleGetDirectionsFromList(item.lat,item.lng)}>
-                    <Image style={styles.userImage} source={require('../../assets/images/location.png')}  />
-                    </TouchableOpacity>
-                    </View>
-                   
-                  
+                 <View style={{flexDirection:'row',padding:10,backgroundColor:'#f3aa00',borderRadius:15,marginBottom:10}}>
+                  <View style={{width:'15%',backgroundColor:'#fff',padding:20,borderRadius:10,justifyContent: 'center',alignItems: 'center'}}>
+                  <Text style={{color:'#f3aa00',fontWeight:'bold',fontSize:16}}>01</Text>
                   </View>
+                  <View style={{width:"85%",paddingLeft:10,flexDirection:"row"}}>
+                  <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}>
+                    <Image style={{paddingTop:15}} source={require('../../assets/images/pin.png')}  />
+                   </View>
+                   <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}> 
+                      <Text style={{fontSize:14,fontWeight:'bold',paddingTop:0,color:"#fff",paddingLeft:10}}>
+                     205 New Toronto St, Toronto {"\n"}ON M8VOA1, Canada</Text>
+                   </View>
+                  </View>
+          </View> 
 
                   )} 
                   />
@@ -390,7 +466,7 @@ const styles = StyleSheet.create({
   container: {
    flex: 1,
     justifyContent: 'center',
-   backgroundColor:"#000",
+   backgroundColor:"#fff",
     alignContent: 'center',
   },
   welcome: {
@@ -424,7 +500,7 @@ const styles = StyleSheet.create({
     padding: 10,
     flex: 1,
     flexDirection: 'row',
-    borderBottomWidth :2,
+    borderBottomWidth :5,
     borderBottomColor: '#247ee8',
   },
   imgtext:{ 
@@ -469,6 +545,42 @@ userImage:{
     alignItems: 'center',
     borderRadius:80,
     backgroundColor: "#ea1780",
+  },
+
+  driverheader: {
+    flex: 0.4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    padding:10,
+    marginTop:15,
+    marginBottom:0,
+
+   }, 
+  section: {
+    flexDirection: 'row',
+  },
+  item: {
+    width: '50%'
+  },
+  profileimg:{
+    width:"30%",
+    backgroundColor:"#000",
+    padding:10,
+    backgroundColor: "#247ee8",
+    borderRadius:10
+  },
+   profileimg2:{
+    width:"30%",
+  },
+  indication:{
+    marginBottom:10,
+    flexDirection: 'row',
+    paddingLeft:10,
+    paddingRight:10
+  },
+  item2:{
+    width: '33.333%'
   }
 });
 
