@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Text, Image, SafeAreaView, NetInfo, StyleSheet,Button,Dimensions,TouchableOpacity } from 'react-native';
 import { image, config, _showErrorMessage, _showSuccessMessage, _retrieveUser,_storeWarehouse, _retrieveWarehouse, _retrieveWaypoints,_storeWaypoints,_storeAddress, Loader, _storeUser, _retrieveFulladdress,_storeFulladdress } from '../../assets';
-import { getRoutes } from '../../api';
+import { getRoutes,markNumberToPackages } from '../../api';
 import Geolocation from '@react-native-community/geolocation';
 navigator.geolocation = require('@react-native-community/geolocation');
 
@@ -18,6 +18,7 @@ class Direction extends Component {
 
 componentDidMount = () => { 
 
+
 _storeWaypoints([
   {latitude:29.513397217929786, longitude:76.71176883208344},  
   {latitude:29.512944, longitude:76.711241},
@@ -28,14 +29,22 @@ _storeWaypoints([
 ]);
 
 _storeFulladdress([
+    {address:"Address 1",latitude:29.513397217929786, longitude:76.71176883208344},
     {address:"Parnit Furniture",latitude:29.512944, longitude:76.711241},
-    {address:"Punjab National Bank",latitude:29.512430, longitude:76.711182} 
+    {address:"Punjab National Bank",latitude:29.512430, longitude:76.711182},
+    {address:"Address 4",latitude:29.512812, longitude:76.710318 },
+    {address:"address 5",latitude:29.513835, longitude:76.708816 },
+    {address:"address 6",latitude:29.514683, longitude:76.707621 }
+
 ]);
 
 _storeAddress([
-  {lat:29.513397217929786, lng:76.71176883208344,sequence:0},  
-  {lat:29.512944, lng:76.711241,sequence:1},
-  {lat:29.512430, lng:76.711182,sequence:2} 
+  {lat:29.513397217929786, lng:76.71176883208344,sequence:0,status:'delivered'},  
+  {lat:29.512944, lng:76.711241,sequence:1,status:'not-delivered'},
+  {lat:29.512430, lng:76.711182,sequence:2,status:'delivered'},
+  {lat:29.512812, lng:76.710318,sequence:3,status:'active' },
+  {lat:29.513835, lng:76.708816,sequence:4,status:'active' },
+  {lat:29.514683, lng:76.707621,sequence:5,status:'active' } 
 ]);
 
   navigator.geolocation.getCurrentPosition(
@@ -68,7 +77,7 @@ getRoutes().then((res) => {
 
           if(key.latitude != +res.data.lat_long[0].latitude){
 
-            string+= 'destination'+count+'='+key.latitude+','+key.longitude+'&'
+            string+= 'destination'+count+'='+key.barcode+';'+key.latitude+','+key.longitude+'&'
           }
 
           count++;
@@ -101,27 +110,41 @@ fetch(url,{
   const obj=[];
   if(res.results != null){
 
-    _storeAddress(res.results[0].waypoints);
+    const markersData = [];
 
-   for (const key of res.results[0].waypoints) {
-    
-        obj.push({latitude: key.lat, longitude:key.lng});
+    for (const key of res.results[0].waypoints) {
+          markersData.push({barcode:key.id,lat: key.lat, lng:key.lng,sequence:key.sequence,status:'active'});
+     }
 
-   }
+     _storeAddress(markersData);
 
-   this.setState({isloading:false});
 
-   _storeWaypoints(obj).then((res) => {
+     for (const key of res.results[0].waypoints) {
+      
+          obj.push({latitude: key.lat, longitude:key.lng});
 
-      navigator.geolocation.getCurrentPosition(
-            (position) => {
-             
-              this.props.navigation.replace("Map", { names: [position.coords.latitude,position.coords.longitude]});
+     }
+     
+    _storeWaypoints(obj).then((res) => {
+       const formdata = new FormData();
+ 
+        formdata.append('number_packages', JSON.stringify(markersData));
+      markNumberToPackages(formdata).then((res) => {
+        console.log(res);
+         this.setState({isloading:false});
 
-            },
-            (error) => console.warn(error.message),
-            { enableHighAccuracy: true, timeout: 10000 }
-          )
+        navigator.geolocation.getCurrentPosition(
+              (position) => {
+               
+                this.props.navigation.replace("Map", { names: [position.coords.latitude,position.coords.longitude]});
+
+              },
+              (error) => console.warn(error.message),
+              { enableHighAccuracy: true, timeout: 10000 }
+            )
+
+      })
+
 
    })
  

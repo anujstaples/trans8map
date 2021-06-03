@@ -12,6 +12,26 @@ export async function _storeUser(data) {
 		return false
 	}
 } 
+
+export async function _storeCurrentPointStatus(data) {
+	try {
+		await AsyncStorage.setItem('currentpoint status', JSON.stringify(data));
+		return true;
+	} catch (error) {
+		return false
+	}
+}
+
+export async function _retrieveCurrentPointStatus(data) {
+	try {
+		const value = await AsyncStorage.getItem('currentpoint status');
+		return value
+	} catch (error) {
+		return false
+	}
+		
+}
+
 export async function _storeWaypoints(data) {
 	try {
 		await AsyncStorage.setItem('waypoints', JSON.stringify(data));
@@ -88,12 +108,12 @@ export async function _retrieveFulladdress(data) {
 		
 }
 export async function _retrieveUser() {
-	// try {
-	// 	const value = await AsyncStorage.getItem('@Trans8:sQd!@_loginInfo');
-	// 	return value
-	// } catch (error) {
-	// 	return false;
-	// }
+	try {
+		const value = await AsyncStorage.getItem('@Trans8:sQd!@_loginInfo');
+		return value
+	} catch (error) {
+		return false;
+	}
 }
 
 export async function _retrieveUserToken() {

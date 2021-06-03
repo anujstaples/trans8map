@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, Image, SafeAreaView, NetInfo, StyleSheet,Button,Dimensions,TouchableOpacity,FlatList,Modal } from 'react-native';
-import { _retrieveWaypoints,image,_retrieveAddress,_retrieveWarehouse,_retrieveFulladdress,_showSuccessMessage } from '../../assets';
+import { _retrieveWaypoints,image,_retrieveAddress,_retrieveWarehouse,_retrieveFulladdress,_retrieveUser,_showSuccessMessage } from '../../assets';
 import { StackActions } from '@react-navigation/native';
 import { demo } from '../../api';
 import BackgroundFetch from 'react-native-background-fetch';
@@ -54,7 +54,12 @@ class Map extends Component {
       LONGITUDE_DELTA : LATITUDE_DELTA * ASPECT_RATIO,
       currentpointstatus:true,
       bottomMargin:null,
-      title:''
+      title:'',
+      modalVisible:false,
+      totalDistance:'',
+      totalDuration:'',
+      drivername:'',
+      currentAddress:'',
     }
     
 }
@@ -64,8 +69,15 @@ componentDidMount = () => {
 
 setTimeout(()=>this.setState({statusBarHeight: 1}),500);
 
-  _retrieveAddress().then((address) => {
+_retrieveUser().then((user) => {
 
+    var userdata = JSON.parse(user);
+
+    this.setState({drivername:userdata.userInfo.first_name+' '+userdata.userInfo.last_name})
+})
+
+  _retrieveAddress().then((address) => {
+     
       this.setState({FlatListItems:JSON.parse(address)});
       // console.log(this.state.FlatListItems);
   })
@@ -83,18 +95,13 @@ setTimeout(()=>this.setState({statusBarHeight: 1}),500);
         var newpoints =  JSON.parse(points);
         
         var total = newpoints.length;
-        // console.log(newpoints);
-        // console.log(newpoints.length);
         this.setState({origin:{"latitude": newpoints[0].latitude, "longitude": newpoints[0].longitude}});
         // this.setState({destination:{"latitude": newpoints[0].latitude, "longitude": newpoints[0].longitude}});
         this.setState({destination:{"latitude":newpoints[total-1].latitude, "longitude": newpoints[total-1].longitude}});
         this.setState({maplatitude:newpoints[0].latitude});
         this.setState({maplongitude:newpoints[0].longitude});
         this.setState({points:newpoints});
-        // console.log(this.state.latitude) 
-        // console.log(this.state.longitude)
 
-      
     })
 
 
@@ -143,7 +150,7 @@ this.watchID = navigator.geolocation.watchPosition(
          coordinate.timing(newCoordinate).start();
        }
 
-       //this.checkOnArrive(latitude, longitude);
+       this.checkOnArrive(latitude, longitude);
 
 
 
@@ -153,7 +160,14 @@ this.watchID = navigator.geolocation.watchPosition(
   );
 
 }
+getaddress(latitude){
+   for (const key of this.state.fulladdress) {
+        if(key.latitude == latitude){
+          return key.address;
+        }
 
+     }
+} 
 checkOnArrive = (lat,long) => {
 
   if(this.state.nextpoint < this.state.points.length){
@@ -164,11 +178,11 @@ checkOnArrive = (lat,long) => {
 
     const distance = Math.round(haversine(start,destinationltlg,  {unit: 'meter'}));
    
-    if(distance < 20 && this.state.currentpointstatus == true){
+    if(distance < 30 && this.state.currentpointstatus == true){
 
-        _showSuccessMessage('point'+this.state.nextpoint);
+        const address = this.getaddress(destinationltlg.latitude);
       
-        this.setState({nextpoint:this.state.nextpoint+1,currentpointstatus:false}); 
+        this.setState({nextpoint:this.state.nextpoint+1,currentpointstatus:false,modalVisible:true,currentAddress:address}); 
 
     }
     else{
@@ -177,6 +191,15 @@ checkOnArrive = (lat,long) => {
     
  }
 
+}
+
+confirmDestination(){
+  demo().then((res) => {
+
+    alert(res[0].title)
+
+  })
+  this.setState({currentpointstatus:true,modalVisible:false}); 
 }
 
 componentWillUnmount() {
@@ -245,15 +268,9 @@ componentWillUnmount() {
   
     }
 
-
-    getaddress(latitude){
-       for (const key of this.state.fulladdress) {
-            if(key.latitude == latitude){
-              return key.address;
-            }
-
-         }
-    }
+  convertnumber(d) {
+      return (d < 10) ? '0' + d.toString() : d.toString();
+  }
 
   render() {
 
@@ -288,7 +305,7 @@ componentWillUnmount() {
           </View>
           <View style={styles.section}>
             <View style={styles.item}>
-              <Text style={{fontSize:16,fontWeight:'bold'}}>Steve Smith</Text>
+              <Text style={{fontSize:16,fontWeight:'bold'}}>{this.state.drivername}</Text>
               <Text style={{fontSize:14,fontWeight:'bold'}}>21st May 2021</Text>
             </View>
           </View>  
@@ -362,10 +379,7 @@ componentWillUnmount() {
             showsCompass={false}
             userInterfaceStyle={'dark'}
             onRegionChangeComplete = {(region) => {
-              //console.log(this.map.getCamera());
-                  // this.map.animateCamera(, 350);
-                //this.setState({LATITUDE_DELTA:region.latitudeDelta,LONGITUDE_DELTA:region.longitudeDelta,maplatitude:region.latitude,maplongitude:region.longitude});
-               
+             
                     }} 
             
           style={{
@@ -380,10 +394,11 @@ componentWillUnmount() {
           onMapReady={() => this.setState({ bottomMargin: 1 })}
             >
            
-        {this.state.points.map((coordinate, index) =>
-          <MapView.Marker key={`coordinate_${index}`} pinColor="green" coordinate={coordinate} onPress={() => this.handleGetDirections(coordinate)}>
+        {this.state.FlatListItems.map((coordinate, index) =>
+
+          <MapView.Marker key={`coordinate_${index}`} pinColor="green" coordinate={{latitude:coordinate.lat,longitude:coordinate.lng}} onPress={() => this.handleGetDirections(coordinate)}>
           
-          { index == 0 ?
+          { coordinate.status != 'active' ?
             <Image source={require('../../assets/images/complete.png')}  />
 
             :<View><Image source={require('../../assets/images/pending.png')}  />
@@ -393,6 +408,7 @@ componentWillUnmount() {
           
           
           </MapView.Marker>
+         
         )}
 
 
@@ -409,7 +425,7 @@ componentWillUnmount() {
             timePrecision="now"
             mode="DRIVING"
             onReady={result => {
-
+              this.setState({totalDistance:result.distance,totalDuration:result.duration});
               }}
           />
 
@@ -428,41 +444,164 @@ componentWillUnmount() {
                   <View style={{width:"85%",paddingLeft:10}}>
                     <Text style={{fontSize:18,fontWeight:'bold',paddingTop:0,color:"#000"}}>Start Point</Text>
                     <Text style={{fontSize:14,fontWeight:'bold',paddingTop:0,color:"#000"}}>
-                   205 New Toronto St, Toronto {"\n"}ON M8VOA1, Canada</Text>
+                   {this.getaddress(this.state.maplatitude)}</Text>
                   </View>
           </View> 
           <FlatList
                 data={this.state.FlatListItems}
                 keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item }) => (
+                renderItem={({ item, index })=>{
 
+                if(item.sequence !=0){
+
+                if (item.status == 'active'){
+
+                return (
                  <View style={{flexDirection:'row',padding:10,backgroundColor:'#f3aa00',borderRadius:15,marginBottom:10}}>
-                  <View style={{width:'15%',backgroundColor:'#fff',padding:20,borderRadius:10,justifyContent: 'center',alignItems: 'center'}}>
-                  <Text style={{color:'#f3aa00',fontWeight:'bold',fontSize:16}}>01</Text>
-                  </View>
-                  <View style={{width:"85%",paddingLeft:10,flexDirection:"row"}}>
-                  <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}>
-                    <Image style={{paddingTop:15}} source={require('../../assets/images/pin.png')}  />
-                   </View>
-                   <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}> 
-                      <Text style={{fontSize:14,fontWeight:'bold',paddingTop:0,color:"#fff",paddingLeft:10}}>
-                     205 New Toronto St, Toronto {"\n"}ON M8VOA1, Canada</Text>
-                   </View>
-                  </View>
-          </View> 
+                    <View style={{width:'15%',backgroundColor:'#fff',padding:20,borderRadius:10,justifyContent: 'center',alignItems: 'center'}}>
+                    <Text style={{color:'#f3aa00',fontWeight:'bold',fontSize:16}}>{this.convertnumber(item.sequence)}</Text>
+                    </View>
+                    <View style={{width:"85%",paddingLeft:10,flexDirection:"row"}}>
+                    <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}>
+                      <Image style={{paddingTop:15}} source={require('../../assets/images/pin.png')}  />
+                     </View>
+                     <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10,paddingRight:25,flexDirection:"row"}}> 
+                        <Text style={{fontSize:14,fontWeight:'bold',paddingTop:0,color:"#fff",paddingLeft:10}}>
+                        {this.getaddress(item.lat)}
+                       </Text>
+                     </View>
+                    </View>
 
-                  )} 
+                  </View> 
+                  )
+                 }
+
+               }
+
+                  }} 
+                  />
+
+            <FlatList
+                data={this.state.FlatListItems}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item, index })=>{
+
+                if(item.sequence !=0){
+
+               
+                if (item.status == 'delivered'){
+
+                return (
+                 <View style={{flexDirection:'row',padding:10,backgroundColor:'#00c2f3',borderRadius:15,marginBottom:10}}>
+                    <View style={{width:'15%',backgroundColor:'#fff',padding:20,borderRadius:10,justifyContent: 'center',alignItems: 'center'}}>
+                    <Text style={{color:'#00c2f3',fontWeight:'bold',fontSize:16}}>{this.convertnumber(item.sequence)}</Text>
+                    </View>
+                    <View style={{width:"85%",paddingLeft:10,flexDirection:"row"}}>
+                    <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}>
+                      <Image style={{paddingTop:15}} source={require('../../assets/images/pin.png')}  />
+                     </View>
+                     <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}> 
+                        <Text style={{fontSize:14,fontWeight:'bold',paddingTop:0,color:"#fff",paddingLeft:10}}>
+                        {this.getaddress(item.lat)}
+                       </Text>
+                     </View>
+                    </View>
+
+                  </View> 
+                  )
+                 }
+                 
+               }
+
+                  }} 
+                  />
+
+
+            <FlatList
+                data={this.state.FlatListItems}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item, index })=>{
+
+                if(item.sequence !=0){
+
+               
+                 if(item.status ==  'not-delivered' || item.status == 'return'){
+
+                  return (
+                 <View style={{flexDirection:'row',padding:10,backgroundColor:'#f32525',borderRadius:15,marginBottom:10}}>
+                    <View style={{width:'15%',backgroundColor:'#fff',padding:20,borderRadius:10,justifyContent: 'center',alignItems: 'center'}}>
+                    <Text style={{color:'#f32525',fontWeight:'bold',fontSize:16}}>{this.convertnumber(item.sequence)}</Text>
+                    </View>
+                    <View style={{width:"85%",paddingLeft:10,flexDirection:"row"}}>
+                    <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}>
+                      <Image style={{paddingTop:15}} source={require('../../assets/images/pin.png')}  />
+                     </View>
+                     <View style={{justifyContent: 'center',alignItems: 'center',paddingLeft:10}}> 
+                        <Text style={{fontSize:14,fontWeight:'bold',paddingTop:0,color:"#fff",paddingLeft:10}}>
+                        {this.getaddress(item.lat)}
+                       </Text>
+                     </View>
+                    </View>
+
+                  </View> 
+                  )
+
+                 }
+               }
+
+                  }} 
                   />
       </View>
     }
-       
+    
+    <Modal
+        animationType="slide"
+        transparent={true}
+        visible={this.state.modalVisible}
+        onRequestClose={() => {
+          Alert.alert("Modal has been closed.");
+          
+        }}
+      > 
+      <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={{marginBottom:20}}>You are arive at {this.state.currentAddress}</Text>
+            <Button style={styles.buttonlogout} onPress={()=> this.confirmDestination()} title="Confirm" />
+        </View>  
+    </View>
+      </Modal>
+      <View style={{flexDirection:"row"}}>
+      <Text style={{paddingTop:20,paddingLeft:10, width:"50%", fontWeight:"bold"}}>Total Distance: {this.state.totalDistance} KM</Text>
+      <Text style={{paddingTop:20,paddingLeft:10, width:"50%", fontWeight:"bold"}}>Total Duration: {Math.round(this.state.totalDuration)} MIN</Text>
+      </View>
     </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
-
+   buttonlogout:{
+    marginTop:20,
+  },
+   centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 0,
+    backgroundColor:"#1c1e2136"
+  },
+  modalView: {
+  margin: 20,
+  backgroundColor: "white",
+  borderRadius: 20,
+  padding: 35,
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 5,
+    height: 2
+  }
+},
   container: {
    flex: 1,
     justifyContent: 'center',

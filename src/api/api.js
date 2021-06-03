@@ -17,7 +17,7 @@ import { image, config } from '../assets';
 
 export async function getRoutes() {
   return _retrieveUserToken().then((token) => {
-    return fetch(config.API_URL+'get_lat_long',{
+    return fetch(config.API_URL+'create_my_route',{
                       method: 'GET',
                       headers: {
                           'Authorization': 'Bearer ' + token,
@@ -38,3 +38,19 @@ export async function demo() {
                       },
                     }).then((res) => res.json())
 }
+ 
+export async function markNumberToPackages(waypoints) {
+  // console.log(waypoints);
+ return _retrieveUserToken().then((token) => {
+  // console.log(token);
+    return fetch(config.API_URL+'mark_number_to_packages',{
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer '+token,        
+          },    
+          body: waypoints
+        })
+        .then((res) => res.json())
+    }); 
+            
+} 
